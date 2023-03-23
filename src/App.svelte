@@ -1,47 +1,64 @@
 <script lang="ts">
-  import svelteLogo from './assets/svelte.svg'
-  import viteLogo from '/vite.svg'
-  import Counter from './lib/Counter.svelte'
+  import { onMount } from "svelte";
+  import contract from "./assets/Contract.js";
+
+  let contractValue = null;
+  let userAddress = null;
+  let newUsername = ""; // Die Variable, die den Wert des Texteingabefelds speichert
+
+  async function connectWallet() {
+    // @ts-ignore
+    if (window.ethereum) {
+      // ethereum is an object injected by the wallet. Let's check if is available
+      // @ts-ignore
+      const accounts = await window.ethereum.request({ method: "eth_requestAccounts" }); // use the request method to get the accounts, aka logging in to Metamask
+      if (accounts.length > 0) {
+        // it returns an array of accounts, it should have at least 1 element
+        userAddress = accounts[0]; // update the state
+      } else {
+        alert("No ethereum accounts found");
+      }
+    } else {
+      alert("No ethereum Wallet found");
+    }
+  }
+
+  async function getName() {
+    contractValue = await contract.methods.getName().call({
+      from: userAddress,
+    });
+    console.log(contractValue);
+  }
+
+  onMount(async () => {
+    await getName();
+  });
+
+  async function setName() {
+    await contract.methods.setName(newUsername).send({
+      from: userAddress,
+    });
+  }
+
+  onMount(async () => {
+    await setName();
+  });
+
+  function handleSubmitNewUsername() {
+    console.log(newUsername); // Gibt den Wert der Variable `name` in der Konsole aus
+  }
 </script>
 
 <main>
-  <div>
-    <a href="https://vitejs.dev" target="_blank" rel="noreferrer">
-      <img src={viteLogo} class="logo" alt="Vite Logo" />
-    </a>
-    <a href="https://svelte.dev" target="_blank" rel="noreferrer">
-      <img src={svelteLogo} class="logo svelte" alt="Svelte Logo" />
-    </a>
-  </div>
-  <h1>Vite + Svelte</h1>
+  <h1>Account Adress: {userAddress}</h1>
+  <button on:click={connectWallet}>Connect</button>
 
-  <div class="card">
-    <Counter />
-  </div>
+  <h1>Your Username is: {contractValue}</h1>
+  <button on:click={getName}>Read Name</button>
 
-  <p>
-    Check out <a href="https://github.com/sveltejs/kit#readme" target="_blank" rel="noreferrer">SvelteKit</a>, the official Svelte app framework powered by Vite!
-  </p>
-
-  <p class="read-the-docs">
-    Click on the Vite and Svelte logos to learn more
-  </p>
+  <form on:submit|preventDefault={handleSubmitNewUsername}>
+    <label for="name">Name:</label>
+    <input type="text" id="name" bind:value={newUsername} />
+    <button on:click={setName}>Send Something (Change Name)</button>
+  </form>
 </main>
-
-<style>
-  .logo {
-    height: 6em;
-    padding: 1.5em;
-    will-change: filter;
-    transition: filter 300ms;
-  }
-  .logo:hover {
-    filter: drop-shadow(0 0 2em #646cffaa);
-  }
-  .logo.svelte:hover {
-    filter: drop-shadow(0 0 2em #ff3e00aa);
-  }
-  .read-the-docs {
-    color: #888;
-  }
-</style>

@@ -17,5 +17,9 @@
     "tslib": "^2.5.0",
     "typescript": "^4.9.3",
     "vite": "^4.2.0"
+  },
+  "dependencies": {
+    "@types/web3": "^1.2.2",
+    "web3": "^1.9.0"
   }
 }
